@@ -14,8 +14,8 @@ const register = async (req, res) => {
       .input('LastName', sql.NVarChar(50), lastName)
       .input('Email', sql.NVarChar(100), email)
       .input('PasswordHash', sql.NVarChar(255), hash)
-      .execute('sp_RegisterUser'); // Utilisez une procédure stockée pour insérer l'utilisateur dans les tables Users et Auth
-
+      .execute('sp_RegisterUser'); 
+    
     await pool.close();
     
     res.status(200).json({ message: 'Registration successful' });

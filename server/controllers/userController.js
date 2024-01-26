@@ -50,20 +50,27 @@ const createUser = async (req, res) => {
       .input('City', sql.NVarChar(50), city)
       .input('DateOfBirth', sql.Date, dateOfBirth)
       .input('Gender', sql.NVarChar(10), gender)
-      .query('INSERT INTO Users (FirstName, LastName, Email, Country, City, DateOfBirth, Gender) VALUES (@FirstName, @LastName, @Email, @Country, @City, @DateOfBirth, @Gender)');
+      .query(`
+        INSERT INTO Users (FirstName, LastName, Email, Country, City, DateOfBirth, Gender)
+        OUTPUT INSERTED.UserID
+        VALUES (@FirstName, @LastName, @Email, @Country, @City, @DateOfBirth, @Gender)
+      `);
 
-    const userId = result.recordset[0].UserID;
+    if (result.rowsAffected[0] > 0) {
+      const userId = result.recordset[0].UserID;
 
-    const birthdayDate = new Date(dateOfBirth);
-    await calendarController.addEventToCalendar(userId, 'Birthday', birthdayDate);
+      const birthdayDate = new Date(dateOfBirth);
+      await calendarController.addEventToCalendar(userId, 'Birthday', birthdayDate);
 
-    res.status(201).json({ message: 'User created successfully', userId });
+      res.status(201).json({ message: 'User created successfully', userId });
+    } else {
+      res.status(500).json({ error: 'Error creating user: UserID not available in the response' });
+    }
   } catch (error) {
     console.error('Error creating user:', error.message);
     res.status(500).json({ error: 'Error creating user' });
   }
 };
-
 
 
 const updateUser = async (req, res) => {

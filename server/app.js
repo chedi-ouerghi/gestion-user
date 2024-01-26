@@ -21,7 +21,7 @@ app.use('/user', userRoutes);
 app.use('/calendar', calendarRoutes);
 
 
-const port = process.env.PORT || 3000;
+const port = 5625;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
