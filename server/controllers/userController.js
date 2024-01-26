@@ -59,6 +59,7 @@ const createUser = async (req, res) => {
     if (result.rowsAffected[0] > 0) {
       const userId = result.recordset[0].UserID;
 
+      // Automatically add birthday event to the user's calendar
       const birthdayDate = new Date(dateOfBirth);
       await calendarController.addEventToCalendar(userId, 'Birthday', birthdayDate);
 
@@ -92,6 +93,17 @@ const updateUser = async (req, res) => {
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // Remove the old birthday event from the calendar
+    const oldUser = await getUserById(req, res); // Assuming you have a method to fetch user details by ID
+    if (oldUser) {
+      const oldBirthdayDate = new Date(oldUser.DateOfBirth);
+      await calendarController.deleteEventByDate(userId, 'Birthday', oldBirthdayDate);
+    }
+
+    // Add the updated birthday event to the calendar
+    const birthdayDate = new Date(dateOfBirth);
+    await calendarController.addEventToCalendar(userId, 'Birthday', birthdayDate);
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {

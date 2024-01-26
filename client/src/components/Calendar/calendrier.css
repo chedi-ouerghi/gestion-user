@@ -1,0 +1,66 @@
+/* CombinedCalendar.css */
+
+.custom-calendar {
+    width: 100%;
+    height: 50vh;
+    position: relative;
+    overflow: overlay;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+}
+
+.day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  cursor: pointer;
+  position: relative;
+}
+
+.day-cell span {
+  font-size: 18px;
+}
+
+.day-cell:hover {
+  background-color: #f5f5f5;
+}
+
+/* Style pour les événements */
+.popover-content {
+  padding: 16px;
+}
+
+.popover-content h4 {
+  margin-bottom: 8px;
+}
+
+.popover-content .ant-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.popover-content .ant-btn {
+  margin-left: 8px;
+}
+
+/* Style pour le formulaire d'ajout d'événement */
+.form-container {
+  margin-top: 16px;
+}
+
+/* Style pour le modal de mise à jour d'événement */
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.modal-content .ant-btn {
+  margin-right: 8px;
+}

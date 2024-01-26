@@ -6,18 +6,30 @@ const register = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
   try {
+    if (!email) {
+      console.error('Email is required for registration');
+      return res.status(400).json({ error: 'Email is required for registration' });
+    }
+
     const hash = await bcrypt.hash(password, 10);
     const pool = await sql.connect(dbConfig);
-    
-    const result = await pool.request()
-      .input('FirstName', sql.NVarChar(50), firstName)
-      .input('LastName', sql.NVarChar(50), lastName)
+
+    // Inserting user information into [Users] table
+    const insertUserResult = await pool.request()
+      .query(`INSERT INTO [Users] (FirstName, LastName, Email) VALUES ('${firstName}', '${lastName}', '${email}'); SELECT SCOPE_IDENTITY() AS UserID`);
+
+    const userId = insertUserResult.recordset[0].UserID;
+
+    // Inserting authentication information into [Auth] table
+    const insertAuthResult = await pool.request()
+      .input('UserID', sql.Int, userId)
       .input('Email', sql.NVarChar(100), email)
       .input('PasswordHash', sql.NVarChar(255), hash)
-      .execute('sp_RegisterUser'); 
-    
+      .query(`INSERT INTO [Auth] (UserID, Email, PasswordHash) VALUES (@UserID, @Email, @PasswordHash)`);
+
     await pool.close();
-    
+
+    console.log('Registration successful:', { userId, email });
     res.status(200).json({ message: 'Registration successful' });
   } catch (error) {
     console.error('Registration failed:', error.message);
@@ -30,24 +42,29 @@ const login = async (req, res) => {
 
   try {
     const pool = await sql.connect(dbConfig);
+
+    // Retrieving user authentication information
     const result = await pool.request()
       .input('Email', sql.NVarChar(100), email)
-      .execute('sp_GetUserByEmail'); // Utilisez une procédure stockée pour récupérer l'utilisateur par email
+      .query('SELECT * FROM [Auth] WHERE [Email] = @Email');
 
     const user = result.recordset[0];
-    
+
     if (!user) {
+      console.error('Invalid email or password');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.PasswordHash);
 
     if (!isPasswordValid) {
+      console.error('Invalid email or password');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Créer une session utilisateur ici si nécessaire
+    // Create a user session here if necessary
 
+    console.log('Login successful:', { userId: user.UserID, email });
     res.status(200).json({ message: 'Login successful', user });
   } catch (error) {
     console.error('Login failed:', error.message);
