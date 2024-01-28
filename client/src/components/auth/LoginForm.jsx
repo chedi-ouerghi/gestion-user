@@ -22,12 +22,12 @@ const handleLogin = async () => {
     const response = await axios.post('http://localhost:5625/auth/login', formData);
 
     if (response.status === 200) {
-      // Storing userId in localStorage
-      localStorage.setItem('userId', response.data.user.UserID); // Utilisation de la bonne clé
-      // ou localStorage.setItem('userId', response.data.user.userId); selon la structure de votre objet utilisateur
+      // Storing token and userId in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.user.UserID);
 
       // Login successful, navigate to profile page
-      navigate('/profile');
+      navigate(`/profile/${response.data.user.UserID}`);
     } else {
       console.error('Login failed:', response.data.error);
       // Handle login failure, display error message or take appropriate action
@@ -37,6 +37,7 @@ const handleLogin = async () => {
     // Handle login failure, display error message or take appropriate action
   }
 };
+
 
 
   return (

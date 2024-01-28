@@ -1,21 +1,14 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-const weatherController = require('../controllers/weatherController');
+// const weatherController = require('../controllers/weatherController');
 
 const router = express.Router();
 
-// Routes pour les utilisateurs
 router.get('/users', userController.getAllUsers);
-router.get('/user/:id', userController.getUserById);
+router.get('/user/:userId', userController.getUserById);
+// router.get('/user/:userId/weather', weatherController.getWeatherByUser); 
 router.post('/users', userController.createUser);
-router.put('/user/:id', userController.updateUser);
-router.delete('/users/:id', userController.deleteUser);
-
-// Nouvelle route pour obtenir la météo par ville
-router.get('/weather/:city', weatherController.getWeatherByCity);
+router.put('/user/:userId', userController.updateUser);
+router.delete('/users/:userId', userController.deleteUser);
 
 module.exports = router;
-
-
-
-

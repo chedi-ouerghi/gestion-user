@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Paper, Typography, Button, Modal, Box, TextField } from '@mui/material';
 import axios from 'axios';
-// import { format } from 'date-fns';
-
 
 const UserProfile = () => {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     firstName: '',
-      lastName: '',
-     Email: '',
+    lastName: '',
+    Email: '',
     country: '',
     city: '',
     dateOfBirth: '',
@@ -17,63 +17,59 @@ const UserProfile = () => {
   });
   const [editSuccessMessage, setEditSuccessMessage] = useState(null);
   const [editErrorMessage, setEditErrorMessage] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-// const formattedDate = format(new Date(editFormData.dateOfBirth), 'yyyy-MM-dd');
 
   const fetchUserData = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      const response = await axios.get(`http://localhost:5625/user/user/${userId}`);
-      console.log('Response:', response); // Log de la réponse
-      if (response.status === 200) {
-        setUserData(response.data);
+      const token = localStorage.getItem('token');
+      const storedUserId = localStorage.getItem('userId');
+
+      if (token && storedUserId) {
+        const userId = parseInt(storedUserId, 10);
+
+        if (!isNaN(userId)) {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          };
+
+          const response = await axios.get(`http://localhost:5625/user/user/${userId}`, config);
+          setUser(response.data);
+        } else {
+          setError('Invalid user ID');
+        }
       } else {
-        console.error('Failed to fetch user data:', response.data.error);
+        setError('User ID or token not found in local storage');
       }
     } catch (error) {
       console.error('Failed to fetch user data:', error.message);
-    } finally {
-      setIsLoading(false); // Mettre isLoading à false une fois que la requête est terminée
+      setError('Failed to fetch user data');
     }
-    };
-      useEffect(() => {
-    fetchUserData(); // Appeler fetchUserData directement lors du rendu initial
+  };
+
+  useEffect(() => {
+    fetchUserData(); // Chargement initial des données utilisateur
   }, []);
 
-useEffect(() => {
-  console.log('Inside useEffect');
-  if (isModalOpen) {
-    console.log('Inside isModalOpen condition'); // Ajout de ce log
-    // Mettez à jour le formulaire avec les données utilisateur actuelles
-    setEditFormData({
-      firstName: userData?.FirstName || '',
-        lastName: userData?.LastName || '',
-        Email: userData?.Email || '',
-      country: userData?.Country || '',
-      city: userData?.City || '',
-      dateOfBirth: userData?.DateOfBirth || '',
-      gender: userData?.Gender || '',
-    });
-  }
-}, [isModalOpen, userData]);
-
-
-  const handleEdit = () => {
+const handleEdit = () => {
     setIsModalOpen(true);
-    // Réinitialiser les messages de succès et d'erreur
     setEditSuccessMessage(null);
     setEditErrorMessage(null);
 
-    // Si les données utilisateur ne sont pas encore chargées, les récupérer
-    if (!userData) {
-      fetchUserData();
-    }
+    // Initialiser le formulaire avec les données utilisateur actuelles
+    setEditFormData({
+      firstName: user?.FirstName || '',
+      lastName: user?.LastName || '',
+      Email: user?.Email || '',
+      country: user?.Country || '',
+      city: user?.City || '',
+      dateOfBirth: user?.DateOfBirth || '',
+      gender: user?.Gender || '',
+    });
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    // Réinitialiser les messages de succès et d'erreur lors de la fermeture du modal
     setEditSuccessMessage(null);
     setEditErrorMessage(null);
   };
@@ -85,15 +81,24 @@ useEffect(() => {
     });
   };
 
+
+
   const handleEditSubmit = async () => {
+    if (!editFormData.firstName || !editFormData.lastName || !editFormData.Email || !editFormData.country || !editFormData.city || !editFormData.dateOfBirth || !editFormData.gender) {
+      setEditErrorMessage('Please fill in all fields');
+      return;
+    }
+
     try {
       const userId = localStorage.getItem('userId');
       const response = await axios.put(`http://localhost:5625/user/user/${userId}`, editFormData);
 
-      if (response.status === 200) {
-        setEditSuccessMessage('Profile updated successfully');
-        // Re-fetch user data after successful update
-        fetchUserData();
+      if (response.data && response.data.message) {
+        setEditSuccessMessage(response.data.message);
+        // Mise à jour du state local avec les nouvelles données utilisateur
+        setUser(response.data.user);
+        // Fermer le modal après la mise à jour réussie
+        handleCloseModal();
       } else {
         setEditErrorMessage('Error updating profile');
       }
@@ -102,6 +107,10 @@ useEffect(() => {
       setEditErrorMessage('Error updating profile');
     }
   };
+  
+  if (!user) {
+    return <Typography variant="body1">Loading user data...</Typography>;
+  }
 
   return (
     <div>
@@ -109,19 +118,15 @@ useEffect(() => {
         Profile
       </Typography>
       <Paper elevation={3} sx={{ padding: 3, marginTop: 4 }}>
-        {isLoading ? (
-          <Typography variant="body1">Loading user data...</Typography>
-        ) : (
-          <>
-            <Typography variant="h6">FirstName: {userData.FirstName}</Typography>
-            <Typography variant="h6">LastName: {userData?.LastName}</Typography>
-            <Typography variant="h6">Email: {userData?.Email}</Typography>
-            <Typography variant="h6">Country: {userData?.Country}</Typography>
-            <Typography variant="h6">City: {userData?.City}</Typography>
-            <Typography variant="h6">Date de naissance: {userData?.DateOfBirth}</Typography>
-            <Typography variant="h6">Genre: {userData?.Gender}</Typography>
-          </>
-        )}
+        <>
+    <Typography variant="h6">FirstName: {user?.FirstName}</Typography>
+          <Typography variant="h6">LastName: {user?.LastName}</Typography>
+          <Typography variant="h6">Email: {user?.Email}</Typography>
+          <Typography variant="h6">Country: {user?.Country}</Typography>
+          <Typography variant="h6">City: {user?.City}</Typography>
+          <Typography variant="h6">Date de naissance: {user?.DateOfBirth}</Typography>
+          <Typography variant="h6">Genre: {user?.Gender}</Typography>
+        </>
       </Paper>
       <Button variant="contained" color="primary" onClick={handleEdit}>
         Edit Profile
@@ -149,8 +154,6 @@ useEffect(() => {
             value={editFormData.firstName}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <TextField
             fullWidth
@@ -158,19 +161,15 @@ useEffect(() => {
             name="lastName"
             value={editFormData.lastName}
             onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-
-
-                  />
-                   <TextField
+            sx={{ mb: 2 }}
+          />
+          <TextField
             fullWidth
             label="Email"
             name="Email"
             value={editFormData.Email}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <TextField
             fullWidth
@@ -179,8 +178,6 @@ useEffect(() => {
             value={editFormData.country}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <TextField
             fullWidth
@@ -189,19 +186,15 @@ useEffect(() => {
             value={editFormData.city}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <TextField
             fullWidth
             label="Date of Birth"
             name="dateOfBirth"
-            type="date" // Assuming dateOfBirth is a date field
+            type="date"
             value={editFormData.dateOfBirth}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <TextField
             fullWidth
@@ -210,8 +203,6 @@ useEffect(() => {
             value={editFormData.gender}
             onChange={handleInputChange}
             sx={{ mb: 2 }}
-
-
           />
           <Button variant="contained" color="primary" onClick={handleEditSubmit}>
             Save Changes

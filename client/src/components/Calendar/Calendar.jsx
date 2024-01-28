@@ -17,7 +17,8 @@ const CombinedCalendar = () => {
   const [editEventId, setEditEventId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  const getAllEvents = async () => {
+
+const getAllEvents = async () => {
     try {
       const response = await axios.get(`http://localhost:5625/calendar/getAllEvents/${userId}`);
       setEvents(response.data);
@@ -28,7 +29,16 @@ const CombinedCalendar = () => {
 
   useEffect(() => {
     getAllEvents();
-  }, []);
+
+    // Set up an interval to refresh events every 5 minutes (adjust as needed)
+    const refreshInterval = setInterval(() => {
+      getAllEvents();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(refreshInterval);
+  }, [userId]);
+
 
   const handleAddEvent = async (values) => {
     try {
@@ -82,7 +92,7 @@ const CombinedCalendar = () => {
 
     return (
       <Popover
-        visible={popoverVisible && dayjs(value).isSame(selectedDate, 'day')}
+        open={popoverVisible && dayjs(value).isSame(selectedDate, 'day')}
         content={
           <div>
             <Title level={4}>Events</Title>
@@ -115,7 +125,7 @@ const CombinedCalendar = () => {
         }
         title={`Events on ${dayjs(value).format('YYYY-MM-DD')}`}
         trigger="click"
-        onVisibleChange={(visible) => {
+        onOpenChange={(visible) => {
           setPopoverVisible(visible);
           setSelectedDate(dayjs(value).isSame(selectedDate, 'day') ? null : dayjs(value));
         }}
@@ -131,7 +141,7 @@ const CombinedCalendar = () => {
   return (
     <Row justify="center" style={{ padding: '20px' }}>
       <Col span={12}>
-        <Calendar dateCellRender={dateCellRender} className="custom-calendar" onPanelChange={onPanelChange} />
+        <Calendar cellRender={dateCellRender} className="custom-calendar" onPanelChange={onPanelChange} />
         <Form form={form} onFinish={handleAddEvent} style={{ marginTop: '16px' }}>
           <Row gutter={8}>
             <Col span={16}>
@@ -154,7 +164,7 @@ const CombinedCalendar = () => {
 
         <Modal
           title="Edit Event"
-          visible={editModalVisible}
+          open={editModalVisible}
           onCancel={() => setEditModalVisible(false)}
           footer={[
             <Button key="cancel" onClick={() => setEditModalVisible(false)}>
@@ -187,3 +197,5 @@ const onPanelChange = (value, mode) => {
 };
 
 export default CombinedCalendar;
+
+

@@ -1,6 +1,12 @@
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
 const dbConfig = require('../config/config');
+const jwt = require('jsonwebtoken');
+
+const generateToken = (userId) => {
+  const token = jwt.sign({ userId }, 'app123acbdefijklmnopqrstuwxyz', { expiresIn: '1h' });
+  return token;
+};
 
 const register = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
@@ -29,8 +35,10 @@ const register = async (req, res) => {
 
     await pool.close();
 
+    const token = generateToken(userId);
+
     console.log('Registration successful:', { userId, email });
-    res.status(200).json({ message: 'Registration successful' });
+    res.status(200).json({ message: 'Registration successful', token });
   } catch (error) {
     console.error('Registration failed:', error.message);
     res.status(500).json({ error: 'Registration failed' });
@@ -62,10 +70,10 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Create a user session here if necessary
+    const token = generateToken(user.UserID);
 
     console.log('Login successful:', { userId: user.UserID, email });
-    res.status(200).json({ message: 'Login successful', user });
+    res.status(200).json({ message: 'Login successful', token, user });
   } catch (error) {
     console.error('Login failed:', error.message);
     res.status(500).json({ error: 'Login failed' });
@@ -73,7 +81,6 @@ const login = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  // Gérer le processus de déconnexion ici
   res.status(200).json({ message: 'Logout successful' });
 };
 

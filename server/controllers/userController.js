@@ -15,27 +15,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-const getUserById = async (req, res) => {
-  const userId = req.params.id;
-
-  try {
-    const pool = await sql.connect(dbConfig);
-    const result = await pool.request()
-      .input('UserId', sql.Int, userId)
-      .query('SELECT * FROM Users WHERE UserID = @UserId');
-    
-    const user = result.recordset[0];
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error.message);
-    res.status(500).json({ error: 'Error fetching user' });
-  }
-};
 
 const createUser = async (req, res) => {
   const { firstName, lastName, email, country, city, dateOfBirth, gender } = req.body;
@@ -73,9 +52,39 @@ const createUser = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  const userId = req.params.userId;
+
+  // Vérifiez si userId est un nombre valide
+  if (isNaN(userId)) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool
+      .request()
+      .input('UserId', sql.Int, userId)
+      .query('SELECT * FROM Users WHERE UserID = @UserId');
+
+    // Vérifiez si des données utilisateur ont été trouvées
+    if (result.recordset.length > 0) {
+      const user = result.recordset[0];
+      console.log('User:', user);  // Ajoutez ce log pour vérifier l'objet utilisateur
+      return res.status(200).json(user);
+    } else {
+      return res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error.message);
+    return res.status(500).json({ error: 'Error fetching user' });
+  }
+};
+
+
 
 const updateUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.userId;
   const { firstName, lastName, country, city, dateOfBirth, gender } = req.body;
 
   try {
@@ -113,7 +122,7 @@ const updateUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.userId;
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -131,5 +140,7 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Error deleting user' });
   }
 };
+
+
 
 module.exports = { getAllUsers, getUserById, createUser, updateUser, deleteUser };

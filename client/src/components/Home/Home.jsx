@@ -1,21 +1,25 @@
 // Home.js
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ProfilePage from '../../pages/ProfilePage';
 import CalendarPage from '../../pages/CalendarPage';
+import Weather from '../Weather/Weather';
 
 const Home = () => {
   return (
-    <div style={{display:'flex'}}>
+    <div style={{ display: 'flex' }}>
       <h1>Home Page</h1>
       <Sidebar />
       <div>
         <Routes>
           <Route path="/home" element={<h2>Home Content</h2>} />
-          {/* Render ProfilePage component within the Home page */}
-                  <Route path="/profile" element={<ProfilePage />} />
-                      <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/profile/:userId/*" element={<ProfilePage />} />
+
+          <Route path="/calendar" element={<CalendarPage />} />
+
+          <Route path="/weather/:userId" element={<Weather />} />
+          <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
       </div>
     </div>
