@@ -3,6 +3,7 @@ const authRoutes = require('./router/auth');
 const userRoutes = require('./router/user');
 const calendarRoutes = require('./router/calendar');
 const weatherRoutes = require('./router/weather');
+const notesRoutes = require('./router/notesRoutes');
 const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -21,6 +22,7 @@ app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/calendar', calendarRoutes);
 app.use('/weather', weatherRoutes);
+app.use('/notes', notesRoutes);
 
 
 const port = 5625;
